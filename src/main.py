@@ -17,8 +17,12 @@ routes = web.RouteTableDef()
 models: list[str] = TTS.list_models()
 DEFAULT_MODEL = models[0]
 
+cached_tts: dict[str,TTS] = {}
+
 def _generate(text: str, model_name: str) -> tuple[bytes, int]:
-  tts = TTS(model_name)
+  if model_name not in cached_tts:
+    cached_tts[model_name] = TTS(model_name)
+  tts = cached_tts[model_name]
   if text[-1] != ".": text += "."
   wav = tts.tts(text) # type: ignore
   return wav, tts.synthesizer.output_sample_rate # type: ignore
