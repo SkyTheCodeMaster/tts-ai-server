@@ -24,8 +24,8 @@ def _generate(text: str, model_name: str) -> tuple[bytes, int]:
     cached_tts[model_name] = TTS(model_name)
   tts = cached_tts[model_name]
   if text[-1] != ".": text += "."
-  speaker = hasattr(tts,"speakers") and tts.speakers[0] or None
-  language = hasattr(tts,"languages") and tts.languages[0] or None
+  speaker = getattr(tts,"speakers",[None])[0]
+  language = getattr(tts,"languages",[None])[0]
   wav = tts.tts(text, speaker=speaker, language=language) # type: ignore
   return wav, tts.synthesizer.output_sample_rate # type: ignore
 
