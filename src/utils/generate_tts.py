@@ -17,13 +17,25 @@ DEFAULT_MODEL = models[0]
 cached_tts: dict[str,TTS] = {}
 
 def _generate(text: str, model_name: str) -> tuple[bytes, int]:
+  print("1. Made it inside of _generate")
   if model_name not in cached_tts:
+    print("1.5. Downloading model.")
     cached_tts[model_name] = TTS(model_name)
   tts = cached_tts[model_name]
+  print("2. Got model")
   if text[-1] != ".": text += "."
-  speaker = getattr(tts,"speakers",[None])[0]
-  language = getattr(tts,"languages",[None])[0]
+  print()
+  try:
+    speaker = getattr(tts,"speakers")[0]
+  except:
+    speaker = None
+  try:
+    language = getattr(tts,"languages")[0]
+  except:
+    language = None
+  print("3. Got speaker/language")
   wav = tts.tts(text, speaker=speaker, language=language) # type: ignore
+  print("4. Generated wav")
   return wav, tts.synthesizer.output_sample_rate # type: ignore
 
 def _generate_audio(text: str, model_name: str) -> bytes:
