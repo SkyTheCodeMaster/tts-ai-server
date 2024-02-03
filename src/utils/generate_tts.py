@@ -14,7 +14,7 @@ routes = web.RouteTableDef()
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-models: list[str] = TTS.list_models()
+models: list[str] = TTS().list_models()
 DEFAULT_MODEL = models[0]
 
 cached_tts: dict[str,TTS] = {}
