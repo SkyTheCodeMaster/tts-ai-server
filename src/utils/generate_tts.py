@@ -47,7 +47,7 @@ def _generate(text: str, model_name: str) -> tuple[bytes, int]:
   print("4. Generated wav")
   return wav, tts.synthesizer.output_sample_rate # type: ignore
 
-def _generate_audio(text: str, model_name: str) -> bytes:
+def _generate_audio(text: str, model_name: str) -> tuple[bytes, int]:
   print("-2. Started _generate_audio")
   queue = multiprocessing.Queue()
   print("-1. Created Queue()")
@@ -65,6 +65,10 @@ def _generate_audio(text: str, model_name: str) -> bytes:
   p.join()
   print("7.5. Joined")
   print("8. Got data and sample_rate")
+  return data, sample_rate
+
+def _generate_full(text: str, model_name: str) -> bytes:
+  data, sample_rate = _generate(text, model_name)
   nparr = np.array(data)
   audio_stage1 = nparr * (32767 / max(0.01, np.max(np.abs(data)))) # type: ignore
   print("9. Audo stage 1")
@@ -80,5 +84,5 @@ def _generate_audio(text: str, model_name: str) -> bytes:
   return rawdata
 
 async def generate(text: str, model_name: str = DEFAULT_MODEL) -> bytes:
-  result = await asyncio.to_thread(_generate_audio, text, model_name)
+  result = await asyncio.to_thread(_generate_full, text, model_name)
   return result
