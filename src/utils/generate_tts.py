@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import asyncio
 from io import BytesIO
-from multiprocessing import Process, Queue
+import multiprocessing
 
 import numpy as np
 import scipy  # type: ignore
 import torch
 from aiohttp import web
 from TTS.api import TTS  # type: ignore
+
+# Fix funny CUDA bug
+multiprocessing.set_start_method("spawn")
 
 routes = web.RouteTableDef()
 
@@ -46,14 +49,14 @@ def _generate(text: str, model_name: str) -> tuple[bytes, int]:
 
 def _generate_audio(text: str, model_name: str) -> bytes:
   print("-2. Started _generate_audio")
-  queue = Queue()
+  queue = multiprocessing.Queue()
   print("-1. Created Queue()")
   def _inner():
     print("0. Reached _inner start")
     queue.put(_generate(text, model_name))
     print("0.1. Reached _inner end")
 
-  p = Process(target=_inner)
+  p = multiprocessing.Process(target=_inner)
   print("5. Made process")
   p.start()
   print("6. Started")
