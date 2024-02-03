@@ -14,8 +14,11 @@ routes = web.RouteTableDef()
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-models: list[str] = TTS().list_models()
-DEFAULT_MODEL = models[0]
+models: list[str] = TTS().list_models().list_models() # Honestly... why?
+if "tts_models/en/ljspeech/tacotron2-DDC" in models:
+  DEFAULT_MODEL = "tts_models/en/ljspeech/tacotron2-DDC"
+else:
+  DEFAULT_MODEL = models[0]
 
 cached_tts: dict[str,TTS] = {}
 
