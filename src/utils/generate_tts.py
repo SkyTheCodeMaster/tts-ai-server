@@ -51,9 +51,10 @@ def _generate_audio(text: str, model_name: str) -> bytes:
   print("5. Made process")
   p.start()
   print("6. Started")
-  p.join()
-  print("7. Joined")
   data, sample_rate = queue.get()
+  print("7. Read Queue")
+  p.join()
+  print("7.5. Joined")
   print("8. Got data and sample_rate")
   nparr = np.array(data)
   audio_stage1 = nparr * (32767 / max(0.01, np.max(np.abs(data)))) # type: ignore

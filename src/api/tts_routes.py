@@ -25,11 +25,11 @@ async def post_ai_generate(request: Request) -> Response:
   if voice not in models:
     return Response(status=400,text="Passed voice not in list of models! Use GET /ai/models/ endpoint for voice list.")
 
-  request.LOG.info("Starting generation job for {0} with input text: '{1}'", request.remote, text)
+  request.LOG.info("Starting generation job for {0} with input text: '{1}'", str(request.remote), text)
   start_time = time.time()
   wav_bytes = await generate(text, voice)
   end_time = time.time()
-  request.LOG.info("Finished generation job for {0} with input text: '{1}'.\nGeneration took {2}s.", request.remote, text, end_time-start_time)
+  request.LOG.info("Finished generation job for {0} with input text: '{1}'.\nGeneration took {2}s.", str(request.remote), text, str(end_time-start_time))
 
   return Response(body=wav_bytes, status=200, content_type="audio/x-wav")
 
