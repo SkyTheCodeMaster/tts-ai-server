@@ -45,12 +45,16 @@ def _generate_audio(text: str, model_name: str) -> bytes:
     queue.put(_generate(text, model_name))
 
   p = Process(target=_inner)
+  print("5. Made process")
   p.start()
+  print("6. Started")
   p.join()
+  print("7. Joined")
   data, sample_rate = queue.get()
-
+  print("8. Got data and sample_rate")
   nparr = np.array(data)
   audio_stage1 = nparr * (32767 / max(0.01, np.max(np.abs(data)))) # type: ignore
+  print("9. Audo stage 1")
 
   fp = BytesIO()
   scipy.io.wavfile.write(
@@ -59,6 +63,7 @@ def _generate_audio(text: str, model_name: str) -> bytes:
     audio_stage1.astype(np.int16)
   )
   rawdata = fp.getvalue()
+  print("10. Got rawdata")
   return rawdata
 
 async def generate(text: str, model_name: str = DEFAULT_MODEL) -> bytes:
