@@ -39,10 +39,13 @@ def _generate(text: str, model_name: str) -> tuple[bytes, int]:
   return wav, tts.synthesizer.output_sample_rate # type: ignore
 
 def _generate_audio(text: str, model_name: str) -> bytes:
+  print("-2. Started _generate_audio")
   queue = Queue()
-
+  print("-1. Created Queue()")
   def _inner():
+    print("0. Reached _inner start")
     queue.put(_generate(text, model_name))
+    print("0.1. Reached _inner end")
 
   p = Process(target=_inner)
   print("5. Made process")
