@@ -6,10 +6,13 @@ from multiprocessing import Process, Queue
 
 import numpy as np
 import scipy  # type: ignore
+import torch
 from aiohttp import web
 from TTS.api import TTS  # type: ignore
 
 routes = web.RouteTableDef()
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 models: list[str] = TTS.list_models()
 DEFAULT_MODEL = models[0]
@@ -20,7 +23,7 @@ def _generate(text: str, model_name: str) -> tuple[bytes, int]:
   print("1. Made it inside of _generate")
   if model_name not in cached_tts:
     print("1.5. Downloading model.")
-    cached_tts[model_name] = TTS(model_name)
+    cached_tts[model_name] = TTS(model_name).to(device)
   tts = cached_tts[model_name]
   print("2. Got model")
   if text[-1] != ".": text += "."
