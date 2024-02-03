@@ -7,14 +7,12 @@ import os
 import tomllib
 
 import aiohttp
-import asyncpg
 import coloredlogs
 from aiohttp import web
 
 from utils.get_routes import get_routes
 from utils.logger import CustomWebLogger
 from utils.pg_pool_middleware import pg_pool_middleware
-from utils.upc import UPC
 
 LOGFMT = "[%(filename)s][%(asctime)s][%(levelname)s] %(message)s"
 LOGDATEFMT = "%Y/%m/%d-%H:%M:%S"
