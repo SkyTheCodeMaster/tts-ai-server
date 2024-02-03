@@ -1,64 +1,116 @@
 from __future__ import annotations
 
 import asyncio
-from io import BytesIO
-from typing import TYPE_CHECKING
+import logging
+import math
+import os
+import tomllib
 
+import aiohttp
+import asyncpg
+import coloredlogs
 from aiohttp import web
-import numpy as np
-from TTS.api import TTS # type: ignore
-import scipy # type: ignore
 
-if TYPE_CHECKING:
-  from aiohttp.web import Request, Response
+from utils.get_routes import get_routes
+from utils.logger import CustomWebLogger
+from utils.pg_pool_middleware import pg_pool_middleware
+from utils.upc import UPC
 
-routes = web.RouteTableDef()
+LOGFMT = "[%(filename)s][%(asctime)s][%(levelname)s] %(message)s"
+LOGDATEFMT = "%Y/%m/%d-%H:%M:%S"
 
-models: list[str] = TTS.list_models()
-DEFAULT_MODEL = models[0]
+handlers = [
+  logging.StreamHandler()
+]
 
-cached_tts: dict[str,TTS] = {}
+with open("config.toml") as f:
+  config = tomllib.loads(f.read())
 
-def _generate(text: str, model_name: str) -> tuple[bytes, int]:
-  if model_name not in cached_tts:
-    cached_tts[model_name] = TTS(model_name)
-  tts = cached_tts[model_name]
-  if text[-1] != ".": text += "."
-  speaker = getattr(tts,"speakers",[None])[0]
-  language = getattr(tts,"languages",[None])[0]
-  wav = tts.tts(text, speaker=speaker, language=language) # type: ignore
-  return wav, tts.synthesizer.output_sample_rate # type: ignore
+if config['log']:
+  handlers.append(logging.FileHandler(config['log']))
 
-async def generate_text(text: str, model_name: str) -> tuple[bytes, int]:
-  loop = asyncio.get_running_loop()
-  r1,r2 = await loop.run_in_executor(None, lambda: _generate(text,model_name))
-  return r1,r2
+logging.basicConfig(
+  handlers = handlers,
+  format=LOGFMT,
+  datefmt=LOGDATEFMT,
+  level=logging.INFO,
+)
 
-@routes.get("/voices")
-async def get_voices(request: Request) -> Response:
-  return web.json_response(models)
+coloredlogs.install(
+  fmt=LOGFMT,
+  datefmt=LOGDATEFMT
+)
 
-@routes.post("/tts")
-async def post_tts(request: Request) -> Response:
-  body = await request.json()
-  voice = body.get("voice",DEFAULT_MODEL)
-  text = body["text"]
-  wav, rate = await generate_text(text,voice)
-  nparr = np.array(wav)
-  audio_stage1 = nparr * (32767 / max(0.01, np.max(np.abs(wav)))) # type: ignore
+LOG = logging.getLogger(__name__)
 
-  fp = BytesIO()
-  scipy.io.wavfile.write(
-    fp,
-    rate,
-    audio_stage1.astype(np.int16)
-  )
-  rawdata = fp.getvalue()
+app = web.Application(
+  logger = CustomWebLogger(LOG),
+  middlewares=[
+    pg_pool_middleware
+  ]
+)
+api_app = web.Application(
+  logger = CustomWebLogger(LOG),
+  middlewares=[
+    pg_pool_middleware
+  ]
+)
 
-  response = web.Response(body=rawdata,status=200,content_type="audio/x-wav")
-  return response
+disabled_cogs: list[str] = []
 
-app = web.Application()
-app.add_routes(routes)
+for cog in [
+    f.replace(".py","") 
+    for f in os.listdir("api") 
+    if os.path.isfile(os.path.join("api",f)) and f.endswith(".py")
+  ]:
+  if cog not in disabled_cogs:
+    LOG.info(f"Loading {cog}...")
+    try:
+      routes = get_routes(f"api.{cog}")
+      for route in routes:
+        LOG.info(f"  ↳ {route}")
+      api_app.add_routes(routes)
+    except:  # noqa: E722
+      LOG.exception(f"Failed to load cog {cog}!")
 
-web.run_app(app,host="127.0.0.1",port=12502) # type: ignore
+app.add_subapp("/api/", api_app)
+
+LOG.info("Loading frontend...")
+try:
+  routes = get_routes("frontend.routes")
+  for route in routes:
+    LOG.info(f"  ↳ {route}")
+  app.add_routes(routes)
+except:  # noqa: E722
+  LOG.exception("Failed to load frontend!")
+  
+async def startup():
+  try:
+    session = aiohttp.ClientSession()
+    app.cs = session
+    api_app.cs = session
+
+    app.LOG = LOG
+    api_app.LOG = LOG
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(
+      runner,
+      config['host'],
+      config['port'],
+    )
+    await site.start()
+    print(f"Started server on http://{config['host']}:{config['port']}...\nPress ^C to close...")
+    await asyncio.sleep(math.inf)
+  except KeyboardInterrupt:
+    pass
+  except asyncio.exceptions.TimeoutError:
+    LOG.error("PostgreSQL connection timeout. Check the connection arguments!")
+  finally:
+    try: await site.stop()   # noqa: E701
+    except: pass  # noqa: E722, E701
+    try: await session.close()   # noqa: E701
+    except: pass  # noqa: E722, E701
+
+asyncio.run(startup())

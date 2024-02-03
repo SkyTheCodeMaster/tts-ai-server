@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Switcher Example</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link id="theme-stylesheet" rel="stylesheet" href="css/themes/mocha.css">
+    <script>
+        function changeTheme(themeName) {
+            document.getElementById('theme-stylesheet').setAttribute('href', 'css/themes/' + themeName + '.css');
+        }
+    </script>
+    <style>
+        #color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .color-square {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin: 2px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <label for="theme-selector">Choose a Theme:</label>
+    <select id="theme-selector" onchange="changeTheme(this.value)">
+        <option value="mocha">Mocha</option>
+        <option value="latte">Latte</option>
+        <option value="frappe">Frappe</option>
+        <option value="macchiato">Macchiato</option>
+    </select>
+
+    <div class="card">
+        <h2>Card Title</h2>
+        <p>This is a card. It should change color based on the selected theme.</p>
+        <button class="button">Click Me</button>
+    </div>
+    <div class="card">
+        <div id="color-palette">
+
+            <div class="color-square" style="background-color: var(--color-rosewater);"></div>
+            <div class="color-square" style="background-color: var(--color-flamingo);"></div>
+            <div class="color-square" style="background-color: var(--color-pink);"></div>
+            <div class="color-square" style="background-color: var(--color-mauve);"></div>
+            <div class="color-square" style="background-color: var(--color-red);"></div>
+            <div class="color-square" style="background-color: var(--color-maroon);"></div>
+            <div class="color-square" style="background-color: var(--color-peach);"></div>
+            <div class="color-square" style="background-color: var(--color-yellow);"></div>
+            <div class="color-square" style="background-color: var(--color-green);"></div>
+            <div class="color-square" style="background-color: var(--color-teal);"></div>
+            <div class="color-square" style="background-color: var(--color-sky);"></div>
+            <div class="color-square" style="background-color: var(--color-sapphire);"></div>
+            <div class="color-square" style="background-color: var(--color-blue);"></div>
+            <div class="color-square" style="background-color: var(--color-lavender);"></div>
+            <div class="color-square" style="background-color: var(--color-text);"></div>
+            <div class="color-square" style="background-color: var(--color-subtext0);"></div>
+            <div class="color-square" style="background-color: var(--color-subtext1);"></div>
+            <div class="color-square" style="background-color: var(--color-overlay0);"></div>
+            <div class="color-square" style="background-color: var(--color-overlay1);"></div>
+            <div class="color-square" style="background-color: var(--color-overlay2);"></div>
+            <div class="color-square" style="background-color: var(--color-surface0);"></div>
+            <div class="color-square" style="background-color: var(--color-surface1);"></div>
+            <div class="color-square" style="background-color: var(--color-surface2);"></div>
+            <div class="color-square" style="background-color: var(--color-base);"></div>
+            <div class="color-square" style="background-color: var(--color-mantle);"></div>
+            <div class="color-square" style="background-color: var(--color-crust);"></div>
+        </div>
+    </div>
+    <footer>
+        <p>This is a footer.</p>
+
+    </footer>
+</body>
+</html>

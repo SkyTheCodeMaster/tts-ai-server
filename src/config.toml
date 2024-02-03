@@ -1,0 +1,6 @@
+host="0.0.0.0"
+port=12502
+
+log=""
+
+devmode=true # this reloads files on *every* request, for easier HTML work
